@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import init
-
+import torch
 
 def conv3x3(in_planes, out_planes, stride=1):
     "3x3 convolution with padding"
@@ -87,12 +87,13 @@ class ResNet(nn.Module):
 
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
-
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1) # Added
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
 
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1)) #Added
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         init.kaiming_normal_(self.fc.weight)
@@ -126,13 +127,17 @@ class ResNet(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
+        x = self.maxpool(x) #Added
 
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
 
-        x = F.avg_pool2d(x, 4)
-        x = x.view(x.size(0), -1)
+        #x = F.avg_pool2d(x, 4)
+        #x = x.view(x.size(0), -1)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+
         x = self.fc(x)
         return x
