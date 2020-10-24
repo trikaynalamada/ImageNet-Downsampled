@@ -169,7 +169,7 @@ def main():
     model = model.to(device)
 
     criterion, optimizer = get_loss_optim(model, device, args.lr, args.momentum, args.weight_decay)
-    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 150],
+    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[10, 20],
                                                         last_epoch=0 - 1) if args.model_type == "cifar" else None
     model = torch.nn.DataParallel(model, device_ids=list(range(int(args.ngpu))))
 
@@ -379,7 +379,7 @@ class AverageMeter(object):
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    lr = args.lr * (0.1 ** (epoch // 30))
+    lr = args.lr * (0.1 ** (epoch // 10))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
     wandb.log({'lr': lr, 'epoch': epoch})
